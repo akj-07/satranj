@@ -1,17 +1,23 @@
 export default function ChessBoard() {
-
-    console.log("ChessBoard");
-    return (
-        <div className="grid grid-cols-8 w-96 h-96">
-            {/* Creating a simple 8x8 grid for the chessboard */}
-            {Array.from({ length: 8 }).map((_, rowIndex) =>
-                Array.from({ length: 8 }).map((_, colIndex) => (
-                    <div
-                        key={`${rowIndex}-${colIndex}`}
-                        className={`w-12 h-12 ${ (rowIndex + colIndex) % 2 === 0 ? 'bg-gray-300' : 'bg-gray-600'}`}
-                    ></div>
-                ))
-            )}-
+  return (
+    <>
+      <div className="w-[90vh] h-[90vh] bg-zinc-500 ">
+        <div className="border-gray-800 border-4 grid grid-cols-8 w-full h-full">
+          {/* Creating a simple 8x8 grid for the chessboard */}
+          {Array.from({ length: 8 }).map((_, rowIndex) =>
+            Array.from({ length: 8 }).map((_, colIndex) => (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                className={`w-[100%] h-[100%] ${
+                  (rowIndex + colIndex) % 2 === 0
+                    ? "bg-gray-300"
+                    : "bg-gray-600"
+                }`}
+              ></div>
+            ))
+          )}
         </div>
-    );
+      </div>
+    </>
+  );
 }
