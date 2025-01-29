@@ -1,17 +1,20 @@
-// app/layout.tsx
+// src/app/layout.tsx
 import './globals.css';
+import type { Metadata } from 'next';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Chess Game',
-  description: 'Play chess online',
+  description: 'A chess game built with Next.js',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-      <html lang="en">
-          <body>
-              <main>{children}</main>
-          </body>
-      </html>
+    <html lang="en">
+      <body>{children}</body>
+    </html>
   );
 }
