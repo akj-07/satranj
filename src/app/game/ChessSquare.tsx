@@ -1,53 +1,67 @@
 "use client";
 import { useDrop } from "react-dnd";
-import { useEffect, useRef } from "react";
 import ChessPiece from "./ChessPiece";
+import { useRef } from "react";
 
 interface ChessSquareProps {
   rowIndex: number;
   colIndex: number;
   piece: string | null;
-  onDrop: (from: string, to: string) => void; // Function to handle dropping a piece
+  pieceColor: "w" | "b" | null;
+  isSelected: boolean;
+  onDrop: (from: string, to: string) => void;
+  onClick: () => void;
 }
 
 export default function ChessSquare({
   rowIndex,
   colIndex,
   piece,
+  pieceColor,
+  isSelected,
   onDrop,
+  onClick,
 }: ChessSquareProps) {
-  const squareRef = useRef<HTMLDivElement | null>(null); // Create a ref for the square
+  // Create a ref for the div element
+  const squareRef = useRef<HTMLDivElement>(null);
 
-  const [{ isOver }, drop] = useDrop(
+  // Use useDrop hook and connect it with our ref
+  const [{ isOver }, dropRef] = useDrop(
     () => ({
       accept: "PIECE",
-      drop: (item: { piece: string; position: string }) => {
-        const fromPosition = item.position;
-        const toPosition = `${rowIndex}-${colIndex}`;
-        onDrop(fromPosition, toPosition);
+      drop: (item: { position: string }) => {
+        const toPosition = `${String.fromCharCode(97 + colIndex)}${
+          8 - rowIndex
+        }`;
+        onDrop(item.position, toPosition);
       },
       collect: (monitor) => ({
         isOver: !!monitor.isOver(),
       }),
     }),
-    [rowIndex, colIndex]
+    [rowIndex, colIndex, onDrop]
   );
 
-  // Attach the ref to the square using useEffect
-  useEffect(() => {
-    if (squareRef.current) {
-      drop(squareRef.current);
-    }
-  }, [drop]);
+  // Connect the drop ref to our square ref
+  dropRef(squareRef);
+
+  const backgroundColor = (() => {
+    if (isSelected) return "bg-yellow-300";
+    if (isOver) return "bg-green-300";
+    return (rowIndex + colIndex) % 2 === 0 ? "bg-gray-300" : "bg-gray-600";
+  })();
 
   return (
     <div
-      ref={squareRef} // Attach ref to the div
-      className={`relative flex items-center justify-center w-full aspect-square ${
-        (rowIndex + colIndex) % 2 === 0 ? "bg-gray-300" : "bg-gray-600"
-      } ${isOver ? "bg-green-400" : ""}`} // Highlight square when a piece is over it
+      ref={squareRef}
+      className={`relative flex items-center justify-center w-full aspect-square cursor-pointer ${backgroundColor}`}
+      onClick={onClick}
     >
-      <ChessPiece piece={piece} position={`${rowIndex}-${colIndex}`} />
+      <ChessPiece
+        piece={piece}
+        color={pieceColor}
+        position={`${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`}
+      />
     </div>
   );
 }
