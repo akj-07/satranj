@@ -4,30 +4,24 @@ import { useState, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import ChessSquare from "./ChessSquare";
-import { Chess } from "chess.js";
+import { Chess, Square } from "chess.js"; // Import Square type from chess.js
 
 export default function ChessBoard() {
-  // Initialize chess.js game instance
   const [game] = useState(new Chess());
-  // State to track the current board position
   const [position, setPosition] = useState(game.board());
-  // State to track the selected square for click-to-move
-  const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
-  // State to track whose turn it is
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null); // Use Square type
   const [turn, setTurn] = useState<"w" | "b">("w");
+  const [legalMoves, setLegalMoves] = useState<Square[]>([]); // Use Square type for legal moves
 
-  // Convert chess.js coordinate to our board coordinate
-  const convertToSquare = (row: number, col: number): string => {
+  const convertToSquare = (row: number, col: number): Square => {
     const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
     const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
-    return files[col] + ranks[row];
+    return (files[col] + ranks[row]) as Square; // Cast to Square type
   };
 
-  // Handle both click and drag moves
   const handleMove = useCallback(
-    (from: string, to: string) => {
+    (from: Square, to: Square) => {
       try {
-        // Attempt to make the move using chess.js
         const move = game.move({
           from: from,
           to: to,
@@ -35,14 +29,11 @@ export default function ChessBoard() {
         });
 
         if (move) {
-          // Update the board position
           setPosition(game.board());
-          // Update turn
           setTurn(game.turn() as "w" | "b");
-          // Clear selected square
           setSelectedSquare(null);
+          setLegalMoves([]);
 
-          // Check for game end conditions
           if (game.isGameOver()) {
             let gameOverMessage = "Game Over! ";
             if (game.isCheckmate()) gameOverMessage += "Checkmate!";
@@ -58,13 +49,11 @@ export default function ChessBoard() {
     [game]
   );
 
-  // Handle square clicks for click-to-move
   const handleSquareClick = useCallback(
     (row: number, col: number) => {
       const square = convertToSquare(row, col);
       const piece = position[row][col];
 
-      // If no square is selected and clicked square has a piece of the current turn
       if (
         !selectedSquare &&
         piece &&
@@ -72,14 +61,15 @@ export default function ChessBoard() {
           (piece.color === "b" && turn === "b"))
       ) {
         setSelectedSquare(square);
-      }
-      // If a square is already selected, attempt to make a move
-      else if (selectedSquare) {
+        const moves = game.moves({ square: square, verbose: true }); // Use verbose: true
+        setLegalMoves(moves.map((move) => move.to as Square)); // Extract 'to' squares and cast to Square type
+      } else if (selectedSquare) {
         handleMove(selectedSquare, square);
         setSelectedSquare(null);
+        setLegalMoves([]);
       }
     },
-    [selectedSquare, position, turn, handleMove]
+    [selectedSquare, position, turn, handleMove, game]
   );
 
   return (
@@ -87,9 +77,10 @@ export default function ChessBoard() {
       <div className="w-[90vw] max-w-[600px] mx-auto grid grid-cols-8 border-4 border-gray-800">
         {position.map((row, rowIndex) =>
           row.map((piece, colIndex) => {
-            // Extract piece type and color from the chess.js piece object
+            const square = convertToSquare(rowIndex, colIndex);
             const pieceType = piece ? piece.type : null;
             const pieceColor = piece ? piece.color : null;
+            const isLegalMove = legalMoves.includes(square);
 
             return (
               <ChessSquare
@@ -97,10 +88,9 @@ export default function ChessBoard() {
                 rowIndex={rowIndex}
                 colIndex={colIndex}
                 piece={pieceType}
-                pieceColor={pieceColor} // Changed from color to pieceColor
-                isSelected={
-                  selectedSquare === convertToSquare(rowIndex, colIndex)
-                }
+                pieceColor={pieceColor}
+                isSelected={selectedSquare === square}
+                isLegalMove={isLegalMove}
                 onDrop={handleMove}
                 onClick={() => handleSquareClick(rowIndex, colIndex)}
               />
