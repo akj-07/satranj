@@ -34,7 +34,9 @@ export default function ChessSquare({
     () => ({
       accept: "PIECE",
       drop: (item: { position: string }) => {
-        const toPosition = `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}` as Square;
+        const toPosition = `${String.fromCharCode(97 + colIndex)}${
+          8 - rowIndex
+        }` as Square;
         onDrop(item.position as Square, toPosition);
       },
       collect: (monitor) => ({
