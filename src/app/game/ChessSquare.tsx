@@ -1,7 +1,9 @@
+// ChessSquare.tsx
 "use client";
 import { useDrop } from "react-dnd";
 import ChessPiece from "./ChessPiece";
 import { useRef } from "react";
+import { Square } from "chess.js";
 
 interface ChessSquareProps {
   rowIndex: number;
@@ -9,7 +11,8 @@ interface ChessSquareProps {
   piece: string | null;
   pieceColor: "w" | "b" | null;
   isSelected: boolean;
-  onDrop: (from: string, to: string) => void;
+  isLegalMove: boolean;
+  onDrop: (from: Square, to: Square) => void;
   onClick: () => void;
 }
 
@@ -19,21 +22,18 @@ export default function ChessSquare({
   piece,
   pieceColor,
   isSelected,
+  isLegalMove,
   onDrop,
   onClick,
 }: ChessSquareProps) {
-  // Create a ref for the div element
   const squareRef = useRef<HTMLDivElement>(null);
 
-  // Use useDrop hook and connect it with our ref
   const [{ isOver }, dropRef] = useDrop(
     () => ({
       accept: "PIECE",
       drop: (item: { position: string }) => {
-        const toPosition = `${String.fromCharCode(97 + colIndex)}${
-          8 - rowIndex
-        }`;
-        onDrop(item.position, toPosition);
+        const toPosition = `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`;
+        onDrop(item.position as Square, toPosition as Square);
       },
       collect: (monitor) => ({
         isOver: !!monitor.isOver(),
@@ -42,11 +42,11 @@ export default function ChessSquare({
     [rowIndex, colIndex, onDrop]
   );
 
-  // Connect the drop ref to our square ref
   dropRef(squareRef);
 
   const backgroundColor = (() => {
     if (isSelected) return "bg-yellow-300";
+    if (isLegalMove) return "bg-green-200";
     if (isOver) return "bg-green-300";
     return (rowIndex + colIndex) % 2 === 0 ? "bg-gray-300" : "bg-gray-600";
   })();
@@ -62,6 +62,9 @@ export default function ChessSquare({
         color={pieceColor}
         position={`${String.fromCharCode(97 + colIndex)}${8 - rowIndex}`}
       />
+      {isLegalMove && !piece && (
+        <div className="w-1/4 h-1/4 bg-green-500 rounded-full opacity-50"></div>
+      )}
     </div>
   );
 }
