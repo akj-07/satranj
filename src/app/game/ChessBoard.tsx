@@ -4,19 +4,22 @@ import { useState, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import ChessSquare from "./ChessSquare";
-import { Chess, Square } from "chess.js"; // Import Square type from chess.js
+import { Chess, Square } from "chess.js";
+import GameOverModal from "./NewGame"; // Import the modal
 
 export default function ChessBoard() {
   const [game] = useState(new Chess());
   const [position, setPosition] = useState(game.board());
-  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null); // Use Square type
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
   const [turn, setTurn] = useState<"w" | "b">("w");
-  const [legalMoves, setLegalMoves] = useState<Square[]>([]); // Use Square type for legal moves
+  const [legalMoves, setLegalMoves] = useState<Square[]>([]);
+  const [isGameOver, setIsGameOver] = useState(false); // Track if the game is over
+  const [gameOverMessage, setGameOverMessage] = useState(""); // Store the game result message
 
   const convertToSquare = (row: number, col: number): Square => {
     const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
     const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
-    return (files[col] + ranks[row]) as Square; // Cast to Square type
+    return (files[col] + ranks[row]) as Square;
   };
 
   const handleMove = useCallback(
@@ -25,7 +28,7 @@ export default function ChessBoard() {
         const move = game.move({
           from: from,
           to: to,
-          promotion: "q", // Always promote to queen for simplicity
+          promotion: "q",
         });
 
         if (move) {
@@ -35,11 +38,12 @@ export default function ChessBoard() {
           setLegalMoves([]);
 
           if (game.isGameOver()) {
-            let gameOverMessage = "Game Over! ";
-            if (game.isCheckmate()) gameOverMessage += "Checkmate!";
-            else if (game.isDraw()) gameOverMessage += "Draw!";
-            else if (game.isStalemate()) gameOverMessage += "Stalemate!";
-            alert(gameOverMessage);
+            let message = "Game Over! ";
+            if (game.isCheckmate()) message += "Checkmate!";
+            else if (game.isDraw()) message += "Draw!";
+            else if (game.isStalemate()) message += "Stalemate!";
+            setGameOverMessage(message); // Set the game result message
+            setIsGameOver(true); // Open the modal
           }
         }
       } catch (e) {
@@ -61,8 +65,8 @@ export default function ChessBoard() {
           (piece.color === "b" && turn === "b"))
       ) {
         setSelectedSquare(square);
-        const moves = game.moves({ square: square, verbose: true }); // Use verbose: true
-        setLegalMoves(moves.map((move) => move.to as Square)); // Extract 'to' squares and cast to Square type
+        const moves = game.moves({ square: square, verbose: true });
+        setLegalMoves(moves.map((move) => move.to as Square));
       } else if (selectedSquare) {
         handleMove(selectedSquare, square);
         setSelectedSquare(null);
@@ -71,6 +75,17 @@ export default function ChessBoard() {
     },
     [selectedSquare, position, turn, handleMove, game]
   );
+
+  const handleNewGame = () => {
+    // Reset the game state
+    game.reset();
+    setPosition(game.board());
+    setTurn("w");
+    setSelectedSquare(null);
+    setLegalMoves([]);
+    setIsGameOver(false); // Close the modal
+    setGameOverMessage(""); // Clear the game result message
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -101,6 +116,13 @@ export default function ChessBoard() {
       <div className="text-center mt-4">
         {`Current turn: ${turn === "w" ? "White" : "Black"}`}
       </div>
+
+      {/* Render the GameOverModal */}
+      <GameOverModal
+        isOpen={isGameOver}
+        message={gameOverMessage}
+        onNewGame={handleNewGame}
+      />
     </DndProvider>
   );
 }
