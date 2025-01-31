@@ -1,4 +1,4 @@
-// ChessSquare.tsx
+// components/ChessSquare.tsx
 "use client";
 import { useDrop } from "react-dnd";
 import ChessPiece from "./ChessPiece";
@@ -12,6 +12,7 @@ interface ChessSquareProps {
   pieceColor: "w" | "b" | null;
   isSelected: boolean;
   isLegalMove: boolean;
+  isKingInCheck: boolean;
   onDrop: (from: Square, to: Square) => void;
   onClick: () => void;
 }
@@ -23,6 +24,7 @@ export default function ChessSquare({
   pieceColor,
   isSelected,
   isLegalMove,
+  isKingInCheck,
   onDrop,
   onClick,
 }: ChessSquareProps) {
@@ -32,10 +34,8 @@ export default function ChessSquare({
     () => ({
       accept: "PIECE",
       drop: (item: { position: string }) => {
-        const toPosition = `${String.fromCharCode(97 + colIndex)}${
-          8 - rowIndex
-        }`;
-        onDrop(item.position as Square, toPosition as Square);
+        const toPosition = `${String.fromCharCode(97 + colIndex)}${8 - rowIndex}` as Square;
+        onDrop(item.position as Square, toPosition);
       },
       collect: (monitor) => ({
         isOver: !!monitor.isOver(),
@@ -56,7 +56,9 @@ export default function ChessSquare({
   return (
     <div
       ref={squareRef}
-      className={`relative flex items-center justify-center w-full aspect-square cursor-pointer ${backgroundColor}`}
+      className={`relative flex items-center justify-center w-full aspect-square cursor-pointer transition-all duration-300 ${backgroundColor} ${
+        isKingInCheck ? "bg-red-500" : ""
+      }`}
       onClick={onClick}
     >
       <ChessPiece
