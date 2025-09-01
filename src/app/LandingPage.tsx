@@ -52,6 +52,7 @@ export function LandingPage() {
 
       {/* Puzzle Modal */}
       {showPuzzle && <Puzzle onClose={() => setShowPuzzle(false)} />}
+      {/* Learn Modal */}
       {showLearn && <Learn onClose={() => setShowLearn(false)} />}
     </div>
   );
